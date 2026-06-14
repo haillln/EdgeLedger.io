@@ -624,14 +624,14 @@
       const configRef = doc(db, "users", currentUid, "config", "engineSettings");
       const configSnap = await getDoc(configRef);
       if (configSnap.exists()) {
-        window.configEngine = { ...window.configEngine, ...configSnap.data() };
+        configEngine = { ...configEngine, ...configSnap.data() };
       }
 
       const tradesRef = collection(db, "users", currentUid, "trades");
       const tradesSnap = await getDocs(tradesRef);
-      window.trades = [];
+      trades = [];
       tradesSnap.forEach((d) => {
-        window.trades.push({ id: d.id, ...d.data() });
+        trades.push({ id: d.id, ...d.data() });
       });
 
       syncConfigEngineDOMValues();
@@ -658,15 +658,17 @@
   };
 
   window.handleSystemLogout = function() {
-    signOut(auth)
-      .then(() => { window.location.href = "index.html"; })
-      .catch(() => { window.location.href = "index.html"; });
+    if (confirm("Confirm terminal session termination request?")) {
+      signOut(auth)
+        .then(() => { window.location.href = "index.html"; })
+        .catch((error) => { alert("[SERVER LOGOUT FAULT]: " + error.message.toUpperCase()); });
+    }
   };
 </script>
 
 <script>
-  window.trades = [];
-  window.configEngine = {
+  let trades = [];
+  let configEngine = {
     startBal: 10000,
     monthlyTarget: 1500,
     currency: '$',
@@ -908,41 +910,67 @@
     const behavioralFaults = [];
     document.querySelectorAll('.f-err-item:checked').forEach(cb => behavioralFaults.push(cb.value));
 
-    const tradePayload = {
-      date: dateVal,
-      pair: pairVal,
-      dir: document.getElementById('f-dir').value,
-      grade: document.getElementById('f-grade').value,
-      entry: parseFloat(document.getElementById('f-entry').value) || 0,
-      exit: parseFloat(document.getElementById('f-exit').value) || 0,
-      sl: parseFloat(document.getElementById('f-sl').value) || 0,
-      tp: parseFloat(document.getElementById('f-tp').value) || 0,
-      lot: lotVolume,
-      pips: parseFloat(document.getElementById('f-pips').value) || 0,
-      riskpct: parseFloat(document.getElementById('f-riskpct').value) || 0,
-      rr: parseFloat(document.getElementById('f-rr').value) || 0,
-      pnl: realSignedPnl,
-      result: finalResultOutcome,
-      strategy: document.getElementById('f-strategy').value || 'Unspecified',
-      setuptype: document.getElementById('f-setuptype').value,
-      htfbias: document.getElementById('f-htfbias').value,
-      session: sessionVal,
-      confluence: document.getElementById('f-confluence-score').value,
-      emobefore: document.getElementById('f-emobefore').value,
-      emoafter: document.getElementById('f-emoafter').value,
-      note: document.getElementById('f-note').value,
-      imgBefore: document.getElementById('img-stored-before').value,
-      imgAfter: document.getElementById('img-stored-after').value,
-      mistakes: behavioralFaults,
-      commissionApplied: dragCommission
-    };
-
-    const finalId = idVal || ('T-' + Date.now());
-
     if(idVal) {
-      trades = trades.map(t => t.id === idVal ? { id: finalId, ...tradePayload } : t);
+      trades = trades.map(t => t.id === idVal ? {
+        id: t.id,
+        date: dateVal,
+        pair: pairVal,
+        dir: document.getElementById('f-dir').value,
+        grade: document.getElementById('f-grade').value,
+        entry: parseFloat(document.getElementById('f-entry').value) || 0,
+        exit: parseFloat(document.getElementById('f-exit').value) || 0,
+        sl: parseFloat(document.getElementById('f-sl').value) || 0,
+        tp: parseFloat(document.getElementById('f-tp').value) || 0,
+        lot: lotVolume,
+        pips: parseFloat(document.getElementById('f-pips').value) || 0,
+        riskpct: parseFloat(document.getElementById('f-riskpct').value) || 0,
+        rr: parseFloat(document.getElementById('f-rr').value) || 0,
+        pnl: realSignedPnl,
+        result: finalResultOutcome,
+        strategy: document.getElementById('f-strategy').value || 'Unspecified',
+        setuptype: document.getElementById('f-setuptype').value,
+        htfbias: document.getElementById('f-htfbias').value,
+        session: sessionVal,
+        confluence: document.getElementById('f-confluence-score').value,
+        emobefore: document.getElementById('f-emobefore').value,
+        emoafter: document.getElementById('f-emoafter').value,
+        note: document.getElementById('f-note').value,
+        imgBefore: document.getElementById('img-stored-before').value,
+        imgAfter: document.getElementById('img-stored-after').value,
+        mistakes: behavioralFaults,
+        commissionApplied: dragCommission
+      } : t);
     } else {
-      trades.push({ id: finalId, ...tradePayload });
+      const generatedNodePayload = {
+        id: 'T-' + Date.now(),
+        date: dateVal,
+        pair: pairVal,
+        dir: document.getElementById('f-dir').value,
+        grade: document.getElementById('f-grade').value,
+        entry: parseFloat(document.getElementById('f-entry').value) || 0,
+        exit: parseFloat(document.getElementById('f-exit').value) || 0,
+        sl: parseFloat(document.getElementById('f-sl').value) || 0,
+        tp: parseFloat(document.getElementById('f-tp').value) || 0,
+        lot: lotVolume,
+        pips: parseFloat(document.getElementById('f-pips').value) || 0,
+        riskpct: parseFloat(document.getElementById('f-riskpct').value) || 0,
+        rr: parseFloat(document.getElementById('f-rr').value) || 0,
+        pnl: realSignedPnl,
+        result: finalResultOutcome,
+        strategy: document.getElementById('f-strategy').value || 'Unspecified',
+        setuptype: document.getElementById('f-setuptype').value,
+        htfbias: document.getElementById('f-htfbias').value,
+        session: sessionVal,
+        confluence: document.getElementById('f-confluence-score').value,
+        emobefore: document.getElementById('f-emobefore').value,
+        emoafter: document.getElementById('f-emoafter').value,
+        note: document.getElementById('f-note').value,
+        imgBefore: document.getElementById('img-stored-before').value,
+        imgAfter: document.getElementById('img-stored-after').value,
+        mistakes: behavioralFaults,
+        commissionApplied: dragCommission
+      };
+      trades.push(generatedNodePayload);
     }
 
     syncStrategySelectors();
@@ -950,8 +978,11 @@
     closeDayInspectionModal();
     renderActiveWorkspaceViews();
 
-    if (window.firebaseSaveTrade) {
-      window.firebaseSaveTrade(finalId, tradePayload).catch(e => console.error("Firebase save error:", e));
+    const savedId = idVal || trades[trades.length - 1].id;
+    const savedPayload = trades.find(t => t.id === (idVal || savedId));
+    if (window.firebaseSaveTrade && savedPayload) {
+      const { id, ...data } = savedPayload;
+      window.firebaseSaveTrade(id, data).catch(e => console.error("Firebase save error:", e));
     }
   }
 
@@ -1367,8 +1398,8 @@
     document.body.classList.add('theme-' + themeColorName);
     renderActiveWorkspaceViews();
   }
-
-
+  
+ 
   // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
