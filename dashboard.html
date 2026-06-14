@@ -624,14 +624,14 @@
       const configRef = doc(db, "users", currentUid, "config", "engineSettings");
       const configSnap = await getDoc(configRef);
       if (configSnap.exists()) {
-        configEngine = { ...configEngine, ...configSnap.data() };
+        window.configEngine = { ...window.configEngine, ...configSnap.data() };
       }
 
       const tradesRef = collection(db, "users", currentUid, "trades");
       const tradesSnap = await getDocs(tradesRef);
-      trades = [];
+      window.trades = [];
       tradesSnap.forEach((d) => {
-        trades.push({ id: d.id, ...d.data() });
+        window.trades.push({ id: d.id, ...d.data() });
       });
 
       syncConfigEngineDOMValues();
@@ -665,8 +665,8 @@
 </script>
 
 <script>
-  let trades = [];
-  let configEngine = {
+  window.trades = [];
+  window.configEngine = {
     startBal: 10000,
     monthlyTarget: 1500,
     currency: '$',
@@ -908,67 +908,41 @@
     const behavioralFaults = [];
     document.querySelectorAll('.f-err-item:checked').forEach(cb => behavioralFaults.push(cb.value));
 
+    const tradePayload = {
+      date: dateVal,
+      pair: pairVal,
+      dir: document.getElementById('f-dir').value,
+      grade: document.getElementById('f-grade').value,
+      entry: parseFloat(document.getElementById('f-entry').value) || 0,
+      exit: parseFloat(document.getElementById('f-exit').value) || 0,
+      sl: parseFloat(document.getElementById('f-sl').value) || 0,
+      tp: parseFloat(document.getElementById('f-tp').value) || 0,
+      lot: lotVolume,
+      pips: parseFloat(document.getElementById('f-pips').value) || 0,
+      riskpct: parseFloat(document.getElementById('f-riskpct').value) || 0,
+      rr: parseFloat(document.getElementById('f-rr').value) || 0,
+      pnl: realSignedPnl,
+      result: finalResultOutcome,
+      strategy: document.getElementById('f-strategy').value || 'Unspecified',
+      setuptype: document.getElementById('f-setuptype').value,
+      htfbias: document.getElementById('f-htfbias').value,
+      session: sessionVal,
+      confluence: document.getElementById('f-confluence-score').value,
+      emobefore: document.getElementById('f-emobefore').value,
+      emoafter: document.getElementById('f-emoafter').value,
+      note: document.getElementById('f-note').value,
+      imgBefore: document.getElementById('img-stored-before').value,
+      imgAfter: document.getElementById('img-stored-after').value,
+      mistakes: behavioralFaults,
+      commissionApplied: dragCommission
+    };
+
+    const finalId = idVal || ('T-' + Date.now());
+
     if(idVal) {
-      trades = trades.map(t => t.id === idVal ? {
-        id: t.id,
-        date: dateVal,
-        pair: pairVal,
-        dir: document.getElementById('f-dir').value,
-        grade: document.getElementById('f-grade').value,
-        entry: parseFloat(document.getElementById('f-entry').value) || 0,
-        exit: parseFloat(document.getElementById('f-exit').value) || 0,
-        sl: parseFloat(document.getElementById('f-sl').value) || 0,
-        tp: parseFloat(document.getElementById('f-tp').value) || 0,
-        lot: lotVolume,
-        pips: parseFloat(document.getElementById('f-pips').value) || 0,
-        riskpct: parseFloat(document.getElementById('f-riskpct').value) || 0,
-        rr: parseFloat(document.getElementById('f-rr').value) || 0,
-        pnl: realSignedPnl,
-        result: finalResultOutcome,
-        strategy: document.getElementById('f-strategy').value || 'Unspecified',
-        setuptype: document.getElementById('f-setuptype').value,
-        htfbias: document.getElementById('f-htfbias').value,
-        session: sessionVal,
-        confluence: document.getElementById('f-confluence-score').value,
-        emobefore: document.getElementById('f-emobefore').value,
-        emoafter: document.getElementById('f-emoafter').value,
-        note: document.getElementById('f-note').value,
-        imgBefore: document.getElementById('img-stored-before').value,
-        imgAfter: document.getElementById('img-stored-after').value,
-        mistakes: behavioralFaults,
-        commissionApplied: dragCommission
-      } : t);
+      trades = trades.map(t => t.id === idVal ? { id: finalId, ...tradePayload } : t);
     } else {
-      const generatedNodePayload = {
-        id: 'T-' + Date.now(),
-        date: dateVal,
-        pair: pairVal,
-        dir: document.getElementById('f-dir').value,
-        grade: document.getElementById('f-grade').value,
-        entry: parseFloat(document.getElementById('f-entry').value) || 0,
-        exit: parseFloat(document.getElementById('f-exit').value) || 0,
-        sl: parseFloat(document.getElementById('f-sl').value) || 0,
-        tp: parseFloat(document.getElementById('f-tp').value) || 0,
-        lot: lotVolume,
-        pips: parseFloat(document.getElementById('f-pips').value) || 0,
-        riskpct: parseFloat(document.getElementById('f-riskpct').value) || 0,
-        rr: parseFloat(document.getElementById('f-rr').value) || 0,
-        pnl: realSignedPnl,
-        result: finalResultOutcome,
-        strategy: document.getElementById('f-strategy').value || 'Unspecified',
-        setuptype: document.getElementById('f-setuptype').value,
-        htfbias: document.getElementById('f-htfbias').value,
-        session: sessionVal,
-        confluence: document.getElementById('f-confluence-score').value,
-        emobefore: document.getElementById('f-emobefore').value,
-        emoafter: document.getElementById('f-emoafter').value,
-        note: document.getElementById('f-note').value,
-        imgBefore: document.getElementById('img-stored-before').value,
-        imgAfter: document.getElementById('img-stored-after').value,
-        mistakes: behavioralFaults,
-        commissionApplied: dragCommission
-      };
-      trades.push(generatedNodePayload);
+      trades.push({ id: finalId, ...tradePayload });
     }
 
     syncStrategySelectors();
@@ -976,11 +950,8 @@
     closeDayInspectionModal();
     renderActiveWorkspaceViews();
 
-    const savedId = idVal || trades[trades.length - 1].id;
-    const savedPayload = trades.find(t => t.id === (idVal || savedId));
-    if (window.firebaseSaveTrade && savedPayload) {
-      const { id, ...data } = savedPayload;
-      window.firebaseSaveTrade(id, data).catch(e => console.error("Firebase save error:", e));
+    if (window.firebaseSaveTrade) {
+      window.firebaseSaveTrade(finalId, tradePayload).catch(e => console.error("Firebase save error:", e));
     }
   }
 
@@ -1399,4 +1370,3 @@
 </script>
 </body>
 </html>
-
