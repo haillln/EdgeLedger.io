@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EdgeLedger // Elite Trading Matrix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-main: #06070d;
+      --panel-bg: #0d0f1a;
+      --panel-border: #1e223b;
+      --accent-color: #00bfff;
+      --accent-glow: rgba(0, 191, 255, 0.15);
+      
+      --neon-green: #00ff66; 
+      --neon-red: #ff1a53;   
+      --text-main: #f1f3f9;
+      --text-muted: #8b94b3;
+      --card-radius: 8px;
+      --system-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+      --mobile-nav-bg: #0b1311;
+      --mobile-nav-border: #162e24;
+      --mobile-nav-accent: #00ff66;
+    }
+
+    body.theme-green { --accent-color: #00ff66; --accent-glow: rgba(0, 255, 102, 0.15); }
+    body.theme-purple { --accent-color: #bd00ff; --accent-glow: rgba(189, 0, 255, 0.15); }
+    body.theme-gold { --accent-color: #ffd700; --accent-glow: rgba(255, 215, 0, 0.15); }
+    
+    body.theme-light {
+      --bg-main: #f4f6fa; 
+      --panel-bg: #ffffff; 
+      --panel-border: #a2aabf; 
+      --text-main: #0b0d14;    
+      --text-muted: #40465a;   
+      --neon-green: #009933;   
+      --neon-red: #cc0033;     
+    }
+
+    body.mode-compact { padding: 0.5rem; font-size: 13px; }
+    body.mode-compact .card { padding: 12px; }
+    body.mode-compact .grid-container { gap: 10px; margin-bottom: 1rem; }
+    body.mode-compact .cal-node { min-height: 65px; padding: 6px; }
+
+    body.mode-mobile .cal-grid { grid-template-columns: 1fr; }
+    body.mode-mobile .cal-node.empty { display: none; }
+    body.mode-mobile .t-images, body.mode-mobile .t-metrics-grid { grid-template-columns: 1fr; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html, body { max-width: 100%; overflow-x: hidden; }
+    
+    body { background-color: var(--bg-main); color: var(--text-main); font-size: 14px; padding: 1.5rem; transition: background 0.2s, color 0.2s; font-family: var(--system-font); padding-bottom: 220px; }
+    .wrap { width: 100%; max-width: 1400px; margin: 0 auto; }
+
+    header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.2rem; border-bottom: 2px solid var(--panel-border); margin-bottom: 1.5rem; }
+    
+    .logo { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -1px; text-transform: uppercase; }
+    .logo span { color: var(--accent-color); font-weight: 700; opacity: 0.9; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; border-bottom: 2px solid var(--panel-border); }
+    .tab { padding: 12px 20px; font-size: 13px; font-weight: 700; background: none; border: none; color: var(--text-muted); cursor: pointer; text-transform: uppercase; border-bottom: 3px solid transparent; transition: all 0.2s; font-family: inherit; }
+    .tab:hover, .tab.active { color: var(--text-main); }
+    .tab.active { border-bottom-color: var(--accent-color); }
+
+    .section { display: none; }
+    .section.active { display: block; }
+    
+    .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 1.5rem; width: 100%; }
+    .card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--card-radius); padding: 16px; position: relative; width: 100%; word-wrap: break-word; }
+
+    .widget-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .widget-value { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .progress-track { background: rgba(255,255,255,0.12); height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+    body.theme-light .progress-track { background: rgba(0,0,0,0.15); }
+    .progress-fill { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.3s; }
+
+    .analytics-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 1.5rem; width: 100%; }
+    .astrip-card { background: rgba(255,255,255,0.01); border: 1.5px dashed var(--panel-border); border-radius: 6px; padding: 12px; text-align: center; }
+    body.theme-light .astrip-card { background: rgba(0,0,0,0.02); }
+    .astrip-val { font-size: 16px; font-weight: 800; margin-top: 2px; }
+
+    .filter-bar { display: flex; gap: 10px; background: var(--panel-bg); padding: 10px; border-radius: 6px; border: 1px solid var(--panel-border); margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+    .filter-bar select { background: rgba(0,0,0,0.2); border: 1px solid var(--panel-border); color: var(--text-main); padding: 6px 12px; border-radius: 4px; font-size: 13px; outline: none; font-family: inherit; font-weight: 600; }
+    body.theme-light .filter-bar select { background: #fff; border-color: var(--panel-border); }
+
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; width: 100%; }
+    .cal-day-lbl { text-align: center; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; padding-bottom: 4px; }
+    
+    .cal-node { background: var(--panel-bg); border: 2px solid var(--panel-border); border-radius: 6px; min-height: 85px; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: border-color 0.15s; }
+    .cal-node:hover { border-color: var(--text-main); }
+    .cal-node.empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+    .cal-node-num { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+    .cal-node-pnl { font-size: 14px; font-weight: 900; text-align: right; letter-spacing: -0.3px; }
+
+    .btn { background: var(--panel-border); border: 1px solid var(--panel-border); color: var(--text-main); padding: 8px 16px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-transform: uppercase; font-size: 12px; font-family: inherit; white-space: nowrap; }
+    .btn:hover { background: var(--text-muted); color: #000; border-color: var(--text-muted); }
+    body.theme-light .btn { border-color: var(--panel-border); }
+    .btn-prime { background: var(--accent-color); border-color: var(--accent-color); color: #000; }
+    .btn-prime:hover { background: var(--text-main); color: var(--bg-main); border-color: var(--text-main); }
+    .btn-danger { background: rgba(255,51,102,0.1); border-color: var(--neon-red); color: var(--neon-red); }
+    .btn-danger:hover { background: var(--neon-red); color: #000; }
+
+    .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; width: 100%; }
+    .settings-block { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+    .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--panel-border); }
+    .setting-item span { font-weight: 600; }
+    .setting-item input[type="text"], .setting-item input[type="number"], .setting-item select { background: rgba(0,0,0,0.2); border: 1px solid var(--panel-border); color: var(--text-main); padding: 4px 8px; border-radius: 4px; text-align: right; width: 100px; font-family: inherit; font-weight: 600; }
+    body.theme-light .setting-item input, body.theme-light .setting-item select { background: #fff; color: #000; border-color: var(--panel-border); }
+    .color-presets { display: flex; gap: 8px; }
+    .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+    .color-dot.active { border-color: var(--text-main); }
+
+    .trade-feed { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    .t-card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--card-radius); padding: 16px; border-left: 5px solid var(--text-muted); width: 100%; }
+    .t-card.win { border-left-color: var(--neon-green); }
+    .t-card.loss { border-left-color: var(--neon-red); }
+    .t-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
+    .t-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--panel-border); width: 100%; }
+    body.theme-light .t-metrics-grid { background: rgba(0,0,0,0.04); }
+    .t-subfield { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 0; }
+    .t-subfield span { display: block; font-size: 13px; color: var(--text-main); margin-top: 1px; text-transform: none; font-weight: 700; }
+    .t-images { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; width: 100%; }
+    .t-img-box { border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; background: #000; }
+    .t-img-box span { display: block; font-size: 9px; text-transform: uppercase; background: var(--panel-border); padding: 3px; color: var(--text-muted); text-align: center; }
+    .t-img-box img { width: 100%; max-height: 180px; object-fit: contain; display: block; }
+
+    /* CORE VISIBILITY BLOCKS AND MOBILE SCROLL AREA FIX */
+    .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 999999 !important; overflow-y: auto; padding: 10px; }
+    .overlay.show { display: block !important; }
+    
+    .modal { 
+      background: var(--panel-bg); 
+      border: 2px solid var(--panel-border); 
+      width: 100%; 
+      max-width: 700px; 
+      border-radius: var(--card-radius); 
+      padding: 16px; 
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7); 
+      margin: 20px auto 260px auto; /* Expands bottom canvas boundaries on mobile touch screens */
+      position: relative;
+    }
+    body.theme-light .modal { box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+    .modal-head { font-size: 14px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid var(--panel-border); padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .form-section { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--accent-color); margin: 12px 0 6px 0; letter-spacing: 0.5px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 10px; width: 100%; }
+    .field label { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 3px; }
+    .field input, .field select, .field textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--panel-border); color: var(--text-main); padding: 7px 10px; border-radius: 4px; outline: none; font-size: 13px; font-family: inherit; font-weight: 600; }
+    body.theme-light .field input, body.theme-light .field select, body.theme-light .field textarea { background: #fff; color: #000; border-color: var(--panel-border); }
+    .field input:focus, .field select:focus { border-color: var(--accent-color); }
+    .check-box-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; padding: 4px 0; }
+    .check-lbl { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; color: var(--text-main); font-weight: 600; }
+
+    .leak-tracker { background: rgba(255,51,102,0.06); border: 1.5px dashed var(--neon-red); border-radius: 6px; padding: 12px; margin-top: 15px; }
+
+    .green { color: var(--neon-green) !important; font-weight: 800 !important; }
+    .red { color: var(--neon-red) !important; font-weight: 800 !important; }
+    
+    .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 3px; text-transform: uppercase; background: rgba(255,255,255,0.15); color: var(--text-main); border: 1px solid var(--panel-border); }
+    body.theme-light .badge { background: rgba(0,0,0,0.06); }
+    .badge.win { background: rgba(0,255,102,0.15); color: var(--neon-green) !important; border-color: var(--neon-green); }
+    .badge.loss { background: rgba(255,51,102,0.15); color: var(--neon-red) !important; border-color: var(--neon-red); }
+
+    .mobile-floating-bar {
+      display: flex;
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 480px;
+      background: var(--mobile-nav-bg);
+      border: 2px solid var(--mobile-nav-border);
+      border-radius: 16px;
+      padding: 12px 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .m-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      gap: 4px;
+      flex: 1;
+      text-align: center;
+    }
+    .m-nav-item svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--text-muted);
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .m-nav-item.active { color: var(--mobile-nav-accent); }
+    .m-nav-item.active svg { stroke: var(--mobile-nav-accent); }
+
+    .equity-chart-wrapper {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--card-radius);
+      padding: 20px;
+      width: 100%;
+    }
+    .chart-axis-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 10px;
+      padding: 0 10px;
+    }
+    .equity-svg-container {
+      width: 100%;
+      height: 350px;
+      background: #040509;
+      border-radius: 6px;
+      border: 1px solid var(--panel-border);
+      position: relative;
+    }
+    body.theme-light .equity-svg-container { background: #fdfdfd; }
+
+    @media (min-width: 768px) {
+      .mobile-floating-bar { display: none !important; } 
+      .tabs { display: flex !important; } 
+    }
+
+    @media (max-width: 767px) {
+      .tabs { display: none !important; } 
+      .mobile-floating-bar { display: flex !important; } 
+      
+      #filter-bar-console { display: none !important; }
+
+      .cal-grid { grid-template-columns: repeat(5, 1fr) !important; }
+      .cal-day-lbl:nth-child(6), .cal-day-lbl:nth-child(7) { display: none !important; }
+      .cal-node.weekend-node { display: none !important; }
+    }
+  
+    .floating-log-btn {
+       position: fixed;
+       right: 20px;
+       bottom: 110px;
+       z-index: 9998;
+       padding: 14px 24px;
+       border: none;
+       border-radius: 16px;
+       background: linear-gradient(135deg, #00bfff, #00ff66);
+       color: #000;
+       font-weight: 800;
+       cursor: pointer;
+       box-shadow: 0 0 15px #00bfff, 0 0 35px #00ff66;
+       animation: shinePulse 2s infinite;
+       display: block;
+    }
+    @keyframes shinePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .btn-logout-faint {
+      background: transparent;
+      border: 1px solid rgba(139, 148, 179, 0.2);
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+    .btn-logout-faint:hover {
+      background: rgba(255, 26, 83, 0.1);
+      border-color: rgba(255, 26, 83, 0.3);
+      color: var(--neon-red);
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="logo">Edge<span>Ledger</span></div>
+  </header>
+
+  <div class="grid-container">
+    <div class="card">
+      <div class="widget-title">Account Capital</div>
+      <div class="widget-value" id="wd-balance">$10,000.00</div>
+      <div class="t-subfield" style="margin-top:2px;">Dynamic Ledger Delta</div>
+    </div>
+    <div class="card">
+      <div class="widget-title">Current Streak</div>
+      <div class="widget-value" id="wd-streak">0 Wins</div>
+      <div class="t-subfield" style="margin-top:2px;">Sequential Flow Status</div>
+    </div>
+    <div class="card">
+      <div class="widget-title">Discipline Score</div>
+      <div class="widget-value" id="wd-discipline">100 / 100</div>
+      <div class="progress-track"><div class="progress-fill" id="pb-discipline" style="width: 100%;"></div></div>
+    </div>
+    <div class="card">
+      <div class="widget-title">Target Progression</div>
+      <div class="widget-value" id="wd-challenge">0.00%</div>
+      <div class="progress-track"><div class="progress-fill" id="pb-challenge" style="width: 0%;"></div></div>
+    </div>
+  </div>
+
+  <div class="analytics-strip">
+    <div class="astrip-card"><div class="widget-title">Win Rate</div><div class="astrip-val" id="an-winrate">0%</div></div>
+    <div class="astrip-card"><div class="widget-title">Profit Factor</div><div class="astrip-val" id="an-profitfactor">0.00</div></div>
+    <div class="astrip-card"><div class="widget-title">Avg R:R Ratio</div><div class="astrip-val" id="an-avgrr">0.00:1</div></div>
+    <div class="astrip-card"><div class="widget-title">Expectancy</div><div class="astrip-val" id="an-expectancy">0.00</div></div>
+    <div class="astrip-card"><div class="widget-title">Max Drawdown</div><div class="astrip-val red" id="an-maxdd">-$0.00</div></div>
+    <div class="astrip-card"><div class="widget-title">Avg Win / Loss</div><div class="astrip-val" id="an-avgwinloss"><span class="green">$0.00</span> / <span class="red">$0.00</span></div></div>
+    <div class="astrip-card"><div class="widget-title">Peak Win / Loss</div><div class="astrip-val" id="an-peakwinloss"><span class="green">$0.00</span> / <span class="red">$0.00</span></div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-calendar" onclick="switchSystemTab('calendar', this)">Calendar Matrix</button>
+    <button class="tab" id="tab-btn-feed" onclick="switchSystemTab('feed', this)">Execution Log</button>
+    <button class="tab" id="tab-btn-equity" onclick="switchSystemTab('equity', this)">Equity Path</button>
+    <button class="tab" id="tab-btn-settings" onclick="switchSystemTab('settings', this)">Engine Settings</button>
+  </div>
+
+  <div class="filter-bar" id="filter-bar-console">
+    <span class="t-subfield" style="margin-right:4px;">Filter Scopes:</span>
+    <select id="filt-strategy" onchange="renderActiveWorkspaceViews()"><option value="all">All Models / Strategies</option></select>
+    <select id="filt-month" onchange="renderActiveWorkspaceViews()">
+      <option value="all">All Months</option>
+      <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+      <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+      <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+      <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+    </select>
+    <button class="btn" style="padding:5px 10px;" onclick="clearSystemFilterScopes()">Reset Filter</button>
+  </div>
+
+  <div class="section active" id="sec-calendar">
+    <div class="card">
+      <div class="cal-header">
+        <button class="btn" onclick="adjustCalendarViewScope(-1)">&lt; Prev Month</button>
+        <h3 id="cal-headline" style="text-transform:uppercase; font-weight:800; letter-spacing:0.5px;"></h3>
+        <button class="btn" onclick="adjustCalendarViewScope(1)">Next Month &gt;</button>
+      </div>
+      <div class="cal-grid" id="calendar-render-node"></div>
+    </div>
+  </div>
+
+  <div class="section" id="sec-feed">
+    <div class="trade-feed" id="trade-feed-container"></div>
+  </div>
+
+  <div class="section" id="sec-equity">
+    <div class="equity-chart-wrapper">
+      <div class="modal-head">Account Balance Growth Curve Metric</div>
+      <div class="equity-svg-container" id="equity-svg-mount-node"></div>
+      <div class="chart-axis-legend">
+        <span id="chart-start-date-label">Start Matrix</span>
+        <span id="chart-end-date-label">Terminal Point</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="sec-settings">
+    <div class="settings-grid">
+      <div class="card">
+        <div class="modal-head">Dynamic Account Configuration</div>
+        <div class="settings-block">
+          <div class="setting-item"><span>Starting Balance</span><input type="number" id="cfg-start-bal" value="10000" onchange="updateAccountEngineSettings()"></div>
+          <div class="setting-item"><span>Monthly Target Profit</span><input type="number" id="cfg-monthly-target" value="1500" onchange="updateAccountEngineSettings()"></div>
+          <div class="setting-item"><span>Currency Unit Symbol</span><input type="text" id="cfg-currency" value="$" onchange="updateAccountEngineSettings()"></div>
+          <div class="setting-item"><span style="color:var(--text-muted)">Commission Drag / Lot</span><input type="number" id="cfg-commission" value="0" step="0.5" onchange="updateAccountEngineSettings()"></div>
+        </div>
+        
+        <div class="modal-head" style="margin-top:20px;">Execution Optimization Profile</div>
+        <div class="settings-block">
+          <div class="setting-item"><span>Default Strategy Model</span><input type="text" id="cfg-def-strategy" value="LSF Model" onchange="updateAccountEngineSettings()" style="width:140px; text-align:left;"></div>
+          <div class="setting-item"><span>Default Planned Risk %</span><input type="number" id="cfg-def-risk" value="1.0" step="0.1" onchange="updateAccountEngineSettings()"></div>
+          <div class="setting-item">
+            <span>Default Session Killzone</span>
+            <select id="cfg-def-session" onchange="updateAccountEngineSettings()" style="width:140px;">
+              <option value="London Open">London Open</option>
+              <option value="New York AM">New York AM</option>
+              <option value="New York PM">New York PM</option>
+              <option value="Asia Open">Asia Open</option>
+            </select>
+          </div>
+          <div class="setting-item"><span style="color:var(--text-muted)">Strict Killzone Lockout</span><select id="cfg-killzone-lock" onchange="updateAccountEngineSettings()"><option value="off">Off</option><option value="on">Active</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="modal-head">Interface Customizer & Theme Matrix</div>
+        <div class="settings-block">
+          <div class="setting-item">
+            <span>Workspace Typography Font</span>
+            <select id="set-ui-font" onchange="changeSystemWorkspaceFont(this.value)" style="width: 140px;">
+              <option value="default">System Default</option>
+              <option value="Roboto">Roboto</option>
+              <option value="IBM Plex Sans">IBM Plex Sans</option>
+              <option value="Poppins">Poppins</option>
+              <option value="Inter">Inter</option>
+            </select>
+          </div>
+          <div class="setting-item">
+            <span>Color Palette Accent</span>
+            <div class="color-presets">
+              <div class="color-dot" style="background:#00bfff;" onclick="setSystemTheme('blue')"></div>
+              <div class="color-dot" style="background:#00ff66;" onclick="setSystemTheme('green')"></div>
+              <div class="color-dot" style="background:#bd00ff;" onclick="setSystemTheme('purple')"></div>
+              <div class="color-dot" style="background:#ffd700;" onclick="setSystemTheme('gold')"></div>
+            </div>
+          </div>
+          <div class="setting-item"><span>Contrast Light Mode</span><button class="btn" onclick="toggleSystemLightMode()">Toggle Light Mode</button></div>
+          <div class="setting-item">
+            <span>Layout Density Mode</span>
+            <select id="set-layout-mode" onchange="changeSystemLayoutMode(this.value)">
+              <option value="desktop">Standard View</option>
+              <option value="compact">Compact Matrix</option>
+              <option value="mobile">Mobile Terminal</option>
+            </select>
+          </div>
+        </div>
+        <div class="leak-tracker" id="leak-tracker-node">
+          <div class="widget-title" style="color:var(--neon-red)">Behavioral Capitulation Report</div>
+          <div id="leak-tracker-text" style="font-size:12px; margin-top:4px;">No leaks detected. Capital protection loop stable.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="modal-head">Data Infrastructure Vault</div>
+        <div class="settings-block" style="gap:14px;">
+          <p style="font-size:12px; color:var(--text-muted);">Backup, export, or restore your compressed secure matrices safely via file engines.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button class="btn btn-prime" onclick="exportBackupData()">Export JSON</button>
+            <button class="btn" onclick="exportToCSVData()">Export CSV</button>
+          </div>
+          <div style="border-top:1px solid var(--panel-border); padding-top:12px;">
+            <label style="display:block; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:4px; color:var(--text-muted)">Import / Restore Engine Backup File</label>
+            <input type="file" id="import-file-node" class="btn" style="width:100%; font-size:11px; background:rgba(0,0,0,0.2);" onchange="importBackupData(this)" accept=".json">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 20px; display: flex; justify-content: flex-end; width: 100%;">
+      <button class="btn btn-logout-faint" onclick="handleSystemLogout()">Log Out Account</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="mobile-floating-bar" id="mobile-dock-node">
+  <button class="m-nav-item active" id="m-btn-calendar" onclick="triggerMobileDockSwap('calendar')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+    <span>Calendar</span>
+  </button>
+  <button class="m-nav-item" id="m-btn-feed" onclick="triggerMobileDockSwap('feed')">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+    <span>Log</span>
+  </button>
+  <button class="m-nav-item" id="m-btn-equity" onclick="triggerMobileDockSwap('equity')">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+    <span>Equity</span>
+  </button>
+  <button class="m-nav-item" id="m-btn-settings" onclick="triggerMobileDockSwap('settings')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    <span>Engine</span>
+  </button>
+</div>
+
+<div class="overlay" id="trade-entry-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <span id="modal-action-title">Log System Parameters</span>
+      <button class="btn btn-danger" style="padding:2px 8px;" onclick="closeTradeModal()">X</button>
+    </div>
+    <input type="hidden" id="f-id">
+    
+    <div class="form-section">Metrics Variables</div>
+    <div class="form-grid">
+      <div class="field"><label>Execution Date</label><input type="date" id="f-date"></div>
+      <div class="field"><label>Asset / Pair Name</label><input type="text" id="f-pair" placeholder="EURUSD"></div>
+      <div class="field"><label>Order Vector Route</label><select id="f-dir"><option value="buy">Buy (Long)</option><option value="sell">Sell (Short)</option></select></div>
+      <div class="field"><label>Trade Grade Evaluation</label><select id="f-grade"><option value="A+">A+ Grade</option><option value="A">A Grade</option><option value="B">B Grade</option><option value="C">C Grade</option><option value="D">D Grade</option></select></div>
+    </div>
+
+    <div class="form-grid">
+      <div class="field"><label>Entry Price</label><input type="number" id="f-entry" placeholder="1.08500" step="0.00001"></div>
+      <div class="field"><label>Exit Price</label><input type="number" id="f-exit" placeholder="1.09000" step="0.00001"></div>
+      <div class="field"><label>Stop Loss (SL)</label><input type="number" id="f-sl" placeholder="1.08200" step="0.00001"></div>
+      <div class="field"><label>Take Profit (TP)</label><input type="number" id="f-tp" placeholder="1.09500" step="0.00001"></div>
+    </div>
+
+    <div class="form-grid">
+      <div class="field"><label>Lot Size Volume</label><input type="number" id="f-lot" placeholder="1.0" step="0.01"></div>
+      <div class="field"><label>Delta Pips Profit/Loss</label><input type="number" id="f-pips" placeholder="50" step="0.1"></div>
+      <div class="field"><label>Planned Risk %</label><input type="number" id="f-riskpct" placeholder="1.0" step="0.1"></div>
+      <div class="field"><label>Risk:Reward (R:R)</label><input type="number" id="f-rr" placeholder="2.5" step="0.1"></div>
+    </div>
+
+    <div class="form-grid">
+      <div class="field"><label>Net Cash Value (P&L)</label><input type="number" id="f-pnl" placeholder="250.00" step="0.01"></div>
+      <div class="field"><label>Operational Exit Outcome</label><select id="f-result"><option value="win">Win / Gain Block</option><option value="loss">Loss / Drawdown</option><option value="breakeven">Breakeven / Neutral</option></select></div>
+      <div class="field"><label>Strategy Rule Tag</label><input type="text" id="f-strategy" placeholder="LSF Model"></div>
+      <div class="field"><label>Setup Type Framework</label><select id="f-setuptype"><option value="reversal">Structural Reversal</option><option value="continuation">Trend Continuation</option><option value="range">Range Bound Expansion</option></select></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>HTF Structural Bias</label><select id="f-htfbias"><option value="bullish">Bullish Expansion</option><option value="bearish">Bearish Expansion</option><option value="neutral">Neutral Consolidation</option></select></div>
+      <div class="field"><label>Session Killzone</label>
+        <select id="f-session">
+          <option value="London Open">London Open</option>
+          <option value="New York AM">New York AM</option>
+          <option value="New York PM">New York PM</option>
+          <option value="Asia Open">Asia Open</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field" style="grid-column: span 2;">
+        <label>Confluence Rules Scorecard Evaluation</label>
+        <select id="f-confluence-score">
+          <option value="5">5/5 - Perfect High Probability Setup Criteria</option>
+          <option value="4">4/5 - Strong Structural Alignment Rule Confirmations</option>
+          <option value="3">3/5 - Average Grade Confluence Validation</option>
+          <option value="2">2/5 - Weak Framework Parameter Slip</option>
+          <option value="1">1/5 - Low Probability Speculative Force execution</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-section">Mental Diagnostic Systems</div>
+    <div class="form-grid">
+      <div class="field"><label>Mental State Pre-Entry</label><input type="text" id="f-emobefore" placeholder="Calm, following bias rules"></div>
+      <div class="field"><label>Mental State Post-Exit</label><input type="text" id="f-emoafter" placeholder="Detached from cash results"></div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>Execution Notes</label>
+      <textarea id="f-note" placeholder="Enter trade review text here..." rows="3"></textarea>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>Systemic Behavioral Failure Array Checklist</label>
+      <div class="check-box-grid">
+        <label class="check-lbl"><input type="checkbox" value="FOMO Entry" class="f-err-item"> FOMO Entry</label>
+        <label class="check-lbl"><input type="checkbox" value="Over-Leveraged" class="f-err-item"> Over-Leveraged</label>
+        <label class="check-lbl"><input type="checkbox" value="Moved SL Early" class="f-err-item"> Moved SL Early</label>
+        <label class="check-lbl"><input type="checkbox" value="Chased Market Price" class="f-err-item"> Chased Price</label>
+        <label class="check-lbl"><input type="checkbox" value="Early Exit Violation" class="f-err-item"> Early Exit</label>
+      </div>
+    </div>
+    
+    <div style="display:flex; justify-content: flex-end; gap:10px; margin-top:15px; padding-bottom: 20px;">
+      <button class="btn" type="button" onclick="closeTradeModal()">Cancel</button>
+      <button class="btn btn-prime" type="button" onclick="commitTradeRecordFromForm()">Save Execution Node</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDpL5azC_gO0w_pV5aJbyTKVzTXB7Bl6ms",
+    authDomain: "edgeledger-real-18d9b.firebaseapp.com",
+    projectId: "edgeledger-real-18d9b",
+    storageBucket: "edgeledger-real-18d9b.firebasestorage.app",
+    messagingSenderId: "898193365823",
+    appId: "1:898193365823:web:cc6360ca3f105c7475518a",
+    measurementId: "G-J7YMREZ0KZ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUid = null;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUid = user.uid;
+      await loadIsolatedUserData();
+    } else {
+      window.location.href = "Index.html";
+    }
+  });
+
+  async function loadIsolatedUserData() {
+    try {
+      const configRef = doc(db, "users", currentUid, "config", "engineSettings");
+      const configSnap = await getDoc(configRef);
+      if (configSnap.exists()) {
+        window.configEngine = { ...window.configEngine, ...configSnap.data() };
+      }
+      
+      const tradesRef = collection(db, "users", currentUid, "trades");
+      const tradesSnap = await getDocs(tradesRef);
+      window.trades = [];
+      tradesSnap.forEach((doc) => {
+        window.trades.push({ id: doc.id, ...doc.data() });
+      });
+
+      window.syncConfigEngineDOMValues();
+      window.syncStrategySelectors();
+      window.renderActiveWorkspaceViews();
+    } catch (error) {
+      console.error("Database sync execution failure:", error);
+    }
+  }
+
+  window.firebaseSaveConfig = async function() {
+    if (!currentUid) return;
+    await setDoc(doc(db, "users", currentUid, "config", "engineSettings"), window.configEngine);
+  };
+
+  window.firebaseSaveTrade = async function(tradeId, tradeData) {
+    if (!currentUid) return;
+    await setDoc(doc(db, "users", currentUid, "trades", tradeId), tradeData);
+  };
+
+  window.firebaseDeleteTrade = async function(tradeId) {
+    if (!currentUid) return;
+    await deleteDoc(doc(db, "users", currentUid, "trades", tradeId));
+  };
+
+  window.handleSystemLogout = function() {
+    if (confirm("Confirm terminal session termination request?")) {
+      signOut(auth)
+        .then(() => {
+          window.location.href = "Index.html";
+        })
+        .catch((error) => {
+          alert("[SERVER LOGOUT FAULT]: " + error.message.toUpperCase());
+        });
+    }
+  };
+</script>
+
+<script>
+  window.trades = [];
+  window.configEngine = {
+    startBal: 10000,
+    monthlyTarget: 1500,
+    currency: '$',
+    defStrategy: 'LSF Model',
+    defRisk: 1.0,
+    defSession: 'London Open',
+    commission: 0,
+    killzoneLock: 'off',
+    activeFont: 'default'
+  };
+  let activeTabScope = 'calendar';
+  let calendarActiveDateEngine = new Date();
+
+  function compressAndProcessImageTelemetry(fileInputElement, destinationHiddenId) {
+    if (fileInputElement.files && fileInputElement.files[0]) {
+      const systemReader = new FileReader();
+      systemReader.onload = function (e) {
+        const structuralImg = new Image();
+        structuralImg.onload = function () {
+          const canvas = document.createElement('canvas');
+          const maxDimensionBound = 800;
+          if (structuralImg.width > maxDimensionBound || structuralImg.height > maxDimensionBound) {
+            const calculationScaleRatio = Math.min(maxDimensionBound / structuralImg.width, maxDimensionBound / structuralImg.height);
+            canvas.width = structuralImg.width * calculationScaleRatio;
+            canvas.height = structuralImg.height * calculationScaleRatio;
+          } else {
+            canvas.width = structuralImg.width;
+            canvas.height = structuralImg.height;
+          }
+          const canvasCtx2D = canvas.getContext('2d');
+          canvasCtx2D.drawImage(structuralImg, 0, 0, canvas.width, canvas.height);
+          const optimizedCompressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+          const targetInput = document.getElementById(destinationHiddenId);
+          if(targetInput) targetInput.value = optimizedCompressedBase64;
+        };
+        structuralImg.src = e.target.result;
+      };
+      systemReader.readAsDataURL(fileInputElement.files[0]);
+    }
+  }
+
+  function changeSystemWorkspaceFont(targetFontString) {
+    window.configEngine.activeFont = targetFontString;
+    if (window.firebaseSaveConfig) window.firebaseSaveConfig();
+    if (targetFontString === 'default') {
+      document.documentElement.style.setProperty('--system-font', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
+    } else {
+      document.documentElement.style.setProperty('--system-font', targetFontString);
+    }
+  }
+
+  function syncConfigEngineDOMValues() {
+    document.getElementById('cfg-start-bal').value = window.configEngine.startBal;
+    document.getElementById('cfg-monthly-target').value = window.configEngine.monthlyTarget;
+    document.getElementById('cfg-currency').value = window.configEngine.currency;
+    document.getElementById('cfg-def-strategy').value = window.configEngine.defStrategy;
+    document.getElementById('cfg-def-risk').value = window.configEngine.defRisk;
+    document.getElementById('cfg-def-session').value = window.configEngine.defSession;
+    document.getElementById('cfg-commission').value = window.configEngine.commission;
+    document.getElementById('cfg-killzone-lock').value = window.configEngine.killzoneLock;
+    document.getElementById('set-ui-font').value = window.configEngine.activeFont;
+    changeSystemWorkspaceFont(window.configEngine.activeFont);
+  }
+
+  function updateAccountEngineSettings() {
+    window.configEngine.startBal = parseFloat(document.getElementById('cfg-start-bal').value) || 0;
+    window.configEngine.monthlyTarget = parseFloat(document.getElementById('cfg-monthly-target').value) || 0;
+    window.configEngine.currency = document.getElementById('cfg-currency').value || '$';
+    window.configEngine.defStrategy = document.getElementById('cfg-def-strategy').value;
+    window.configEngine.defRisk = parseFloat(document.getElementById('cfg-def-risk').value) || 0;
+    window.configEngine.defSession = document.getElementById('cfg-def-session').value;
+    window.configEngine.commission = parseFloat(document.getElementById('cfg-commission').value) || 0;
+    window.configEngine.killzoneLock = document.getElementById('cfg-killzone-lock').value;
+    if (window.firebaseSaveConfig) window.firebaseSaveConfig();
+    renderActiveWorkspaceViews();
+  }
+
+  function switchSystemTab(targetId, tabBtnElement) {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    if (tabBtnElement) {
+      tabBtnElement.classList.add('active');
+    } else {
+      const fallbackTabBtn = document.getElementById('tab-btn-' + targetId);
+      if (fallbackTabBtn) fallbackTabBtn.classList.add('active');
+    }
+    document.getElementById('sec-' + targetId).classList.add('active');
+    const filterConsole = document.getElementById('filter-bar-console');
+    if (targetId === 'settings' || targetId === 'equity') {
+      filterConsole.style.display = 'none';
+    } else {
+      if(window.innerWidth >= 768) {
+        filterConsole.style.display = 'flex';
+      }
+    }
+    activeTabScope = targetId;
+    renderActiveWorkspaceViews();
+  }
+
+  function triggerMobileDockSwap(targetTabId) {
+    document.querySelectorAll('.m-nav-item').forEach(el => el.classList.remove('active'));
+    const targetedDockBtn = document.getElementById('m-btn-' + targetTabId);
+    if(targetedDockBtn) targetedDockBtn.classList.add('active');
+    switchSystemTab(targetTabId, null);
+  }
+
+  function toggleSystemLightMode() {
+    document.body.classList.toggle('theme-light');
+    renderActiveWorkspaceViews();
+  }
+
+  function changeSystemLayoutMode(targetDensityString) {
+    document.body.classList.remove('mode-compact', 'mode-mobile');
+    if (targetDensityString === 'compact') {
+      document.body.classList.add('mode-compact');
+    } else if (targetDensityString === 'mobile') {
+      document.body.classList.add('mode-mobile');
+    }
+  }
+
+  function openTradeModalForNewEntry(existingTradeId = null) {
+    document.querySelectorAll('.f-err-item').forEach(cb => cb.checked = false);
+    if(existingTradeId) {
+      document.getElementById('modal-action-title').textContent = "Modify Execution Parameters";
+      document.getElementById('f-id').value = existingTradeId;
+      const targetMatch = window.trades.find(t => t.id === existingTradeId);
+      if(targetMatch) {
+        document.getElementById('f-date').value = targetMatch.date;
+        document.getElementById('f-pair').value = targetMatch.pair;
+        document.getElementById('f-dir').value = targetMatch.dir;
+        document.getElementById('f-grade').value = targetMatch.grade || "A";
+        document.getElementById('f-entry').value = targetMatch.entry;
+        document.getElementById('f-exit').value = targetMatch.exit || "";
+        document.getElementById('f-sl').value = targetMatch.sl || "";
+        document.getElementById('f-tp').value = targetMatch.tp || "";
+        document.getElementById('f-lot').value = targetMatch.lot;
+        document.getElementById('f-pips').value = targetMatch.pips;
+        document.getElementById('f-riskpct').value = targetMatch.riskpct;
+        document.getElementById('f-rr').value = targetMatch.rr;
+        let rawPnlDisplay = Math.abs(targetMatch.pnl);
+        if(targetMatch.commissionApplied) {
+          rawPnlDisplay = Math.abs(targetMatch.pnl + targetMatch.commissionApplied);
+        }
+        document.getElementById('f-pnl').value = rawPnlDisplay;
+        document.getElementById('f-result').value = targetMatch.result;
+        document.getElementById('f-strategy').value = targetMatch.strategy;
+        document.getElementById('f-setuptype').value = targetMatch.setuptype || "continuation";
+        document.getElementById('f-htfbias').value = targetMatch.htfbias || "bullish";
+        document.getElementById('f-session').value = targetMatch.session || "London Open";
+        document.getElementById('f-confluence-score').value = targetMatch.confluence || "3";
+        document.getElementById('f-emobefore').value = targetMatch.emobefore || "";
+        document.getElementById('f-emoafter').value = targetMatch.emoafter || "";
+        document.getElementById('f-note').value = targetMatch.note || "";
+        if(document.getElementById('img-stored-before')) document.getElementById('img-stored-before').value = targetMatch.imgBefore || "";
+        if(document.getElementById('img-stored-after')) document.getElementById('img-stored-after').value = targetMatch.imgAfter || "";
+        if(targetMatch.mistakes) {
+          document.querySelectorAll('.f-err-item').forEach(cb => {
+            if(targetMatch.mistakes.includes(cb.value)) cb.checked = true;
+          });
+        }
+      }
+    } else {
+      document.getElementById('modal-action-title').textContent = "Log System Parameters";
+      document.getElementById('f-id').value = "";
+      document.getElementById('f-date').value = new Date().toISOString().substring(0,10);
+      document.getElementById('f-pair').value = "";
+      document.getElementById('f-entry').value = "";
+      document.getElementById('f-exit').value = "";
+      document.getElementById('f-sl').value = "";
+      document.getElementById('f-tp').value = "";
+      document.getElementById('f-pips').value = "";
+      document.getElementById('f-pnl').value = "";
+      document.getElementById('f-strategy').value = window.configEngine.defStrategy || "";
+      document.getElementById('f-riskpct').value = window.configEngine.defRisk || "1.0";
+      document.getElementById('f-session').value = window.configEngine.defSession || "London Open";
+      document.getElementById('f-lot').value = "0.1";
+      document.getElementById('f-rr').value = "2.0";
+      document.getElementById('f-htfbias').value = "bullish";
+      document.getElementById('f-emobefore').value = "";
+      document.getElementById('f-emoafter').value = "";
+      document.getElementById('f-note').value = "";
+      if(document.getElementById('img-stored-before')) document.getElementById('img-stored-before').value = "";
+      if(document.getElementById('img-stored-after')) document.getElementById('img-stored-after').value = "";
+    }
+    document.getElementById('trade-entry-overlay').style.display = 'block';
+  }
+
+  function closeTradeModal() {
+    document.getElementById('trade-entry-overlay').style.display = 'none';
+  }
+
+  async function commitTradeRecordFromForm() {
+    let idVal = document.getElementById('f-id').value;
+    let dateVal = document.getElementById('f-date').value;
+    let pairVal = document.getElementById('f-pair').value.toUpperCase().trim();
+    let sessionVal = document.getElementById('f-session').value;
+    if(!dateVal || !pairVal) {
+      alert("Validation inputs error: Asset identification variables missing.");
+      return;
+    }
+    if (window.configEngine.killzoneLock === 'on') {
+      const currentHour = new Date().getHours();
+      let killzoneValid = false;
+      if (sessionVal === 'London Open' && (currentHour >= 8 && currentHour <= 12)) killzoneValid = true;
+      if (sessionVal === 'New York AM' && (currentHour >= 13 && currentHour <= 17)) killzoneValid = true;
+      if (sessionVal === 'New York PM' && (currentHour >= 18 && currentHour <= 22)) killzoneValid = true;
+      if (sessionVal === 'Asia Open' && (currentHour >= 0 && currentHour <= 5)) killzoneValid = true;
+      if (!killzoneValid) {
+        alert("Strict Killzone Lockout Active: Execution temporal coordinates misaligned.");
+        return;
+      }
+    }
+    let lotVolume = parseFloat(document.getElementById('f-lot').value) || 0;
+    let dragCommission = lotVolume * (window.configEngine.commission || 0);
+    let calculatedInputPnl = parseFloat(document.getElementById('f-pnl').value) || 0;
+    let finalResultOutcome = document.getElementById('f-result').value;
+    let realSignedPnl = finalResultOutcome === 'loss' ? -Math.abs(calculatedInputPnl) : Math.abs(calculatedInputPnl);
+    if(finalResultOutcome !== 'breakeven') {
+      realSignedPnl = realSignedPnl - dragCommission;
+    }
+    const behavioralFaults = [];
+    document.querySelectorAll('.f-err-item:checked').forEach(cb => behavioralFaults.push(cb.value));
+    
+    const targetedId = idVal || 'vector_' + Math.random().toString(36).substring(2,11);
+    
+    let imgB = document.getElementById('img-stored-before') ? document.getElementById('img-stored-before').value : "";
+    let imgA = document.getElementById('img-stored-after') ? document.getElementById('img-stored-after').value : "";
+
+    const payload = {
+      date: dateVal,
+      pair: pairVal,
+      dir: document.getElementById('f-dir').value,
+      grade: document.getElementById('f-grade').value,
+      entry: parseFloat(document.getElementById('f-entry').value) || 0,
+      exit: parseFloat(document.getElementById('f-exit').value) || 0,
+      sl: parseFloat(document.getElementById('f-sl').value) || 0,
+      tp: parseFloat(document.getElementById('f-tp').value) || 0,
+      lot: lotVolume,
+      pips: parseFloat(document.getElementById('f-pips').value) || 0,
+      riskpct: parseFloat(document.getElementById('f-riskpct').value) || 0,
+      rr: parseFloat(document.getElementById('f-rr').value) || 0,
+      pnl: realSignedPnl,
+      result: finalResultOutcome,
+      strategy: document.getElementById('f-strategy').value || 'Unspecified',
+      setuptype: document.getElementById('f-setuptype').value,
+      htfbias: document.getElementById('f-htfbias').value,
+      session: sessionVal,
+      confluence: document.getElementById('f-confluence-score').value,
+      emobefore: document.getElementById('f-emobefore').value,
+      emoafter: document.getElementById('f-emoafter').value,
+      note: document.getElementById('f-note').value,
+      imgBefore: imgB,
+      imgAfter: imgA,
+      mistakes: behavioralFaults,
+      commissionApplied: dragCommission
+    };
+
+    if(idVal) {
+      window.trades = window.trades.map(t => t.id === idVal ? { id: t.id, ...payload } : t);
+    } else {
+      window.trades.push({ id: targetedId, ...payload });
+    }
+
+    if (window.firebaseSaveTrade) {
+      await window.firebaseSaveTrade(targetedId, payload);
+    }
+
+    syncStrategySelectors();
+    closeTradeModal();
+    renderActiveWorkspaceViews();
+  }
+
+  async function purgeTradeRecordNode(targetRecordId) {
+    if(confirm("Verify deletion sequence targeting execution ledger node?")) {
+      window.trades = window.trades.filter(t => t.id !== targetRecordId);
+      if (window.firebaseDeleteTrade) {
+        await window.firebaseDeleteTrade(targetRecordId);
+      }
+      syncStrategySelectors();
+      renderActiveWorkspaceViews();
+      if(document.getElementById('day-inspection-overlay').style.display === 'block') {
+        const activeDateString = document.getElementById('day-inspection-title').textContent.split('// ')[1];
+        const dayTrades = window.trades.filter(t => t.date === activeDateString);
+        if(!dayTrades.length) {
+          closeDayInspectionModal();
+        } else {
+          executeCalendarDayInlineInspection(activeDateString);
+        }
+      }
+    }
+  }
+
+  function fetchFilteredLedgerDataset() {
+    const stratFilter = document.getElementById('filt-strategy').value;
+    const monthFilter = document.getElementById('filt-month').value;
+    return window.trades.filter(t => {
+      const d = new Date(t.date + 'T00:00:00');
+      if (stratFilter !== 'all' && t.strategy !== stratFilter) return false;
+      if (monthFilter !== 'all' && d.getMonth() !== parseInt(monthFilter)) return false;
+      return true;
+    });
+  }
+
+  function syncStrategySelectors() {
+    const select = document.getElementById('filt-strategy');
+    if(!select) return;
+    const previousSelection = select.value;
+    select.innerHTML = '<option value="all">All Models / Strategies</option>';
+    const distinctSet = [...new Set(window.trades.map(t => t.strategy).filter(Boolean))];
+    distinctSet.forEach(s => {
+      select.innerHTML += `<option value="${s}">${s}</option>`;
+    });
+    if([...distinctSet, 'all'].includes(previousSelection)) select.value = previousSelection;
+  }
+
+  function clearSystemFilterScopes() {
+    document.getElementById('filt-strategy').value = 'all';
+    document.getElementById('filt-month').value = 'all';
+    renderActiveWorkspaceViews();
+  }
+
+  function adjustCalendarViewScope(monthOffset) {
+    calendarActiveDateEngine.setMonth(calendarActiveDateEngine.getMonth() + monthOffset);
+    renderActiveWorkspaceViews();
+  }
+
+  function executeCalendarDayInlineInspection(isoDateString) {
+    const dayTrades = window.trades.filter(t => t.date === isoDateString);
+    if(!dayTrades.length) return;
+
+    document.getElementById('day-inspection-title').textContent = `Execution Parameters Matrix // ${isoDateString}`;
+    const feedNode = document.getElementById('day-inspection-feed');
+    feedNode.innerHTML = '';
+    renderTargetFeedHtmlBlock(dayTrades, feedNode);
+    document.getElementById('day-inspection-overlay').style.display = 'block';
+  }
+
+  function closeDayInspectionModal() {
+    document.getElementById('day-inspection-overlay').style.display = 'none';
+  }
+
+  function renderDynamicBalanceEquityPathGraph(chronologicalTrades) {
+    const canvasNode = document.getElementById('equity-svg-mount-node');
+    if(!canvasNode) return;
+    let runningAccumulator = window.configEngine.startBal;
+    let coordinatePoints = [runningAccumulator];
+    chronologicalTrades.forEach(t => {
+      runningAccumulator += parseFloat(t.pnl || 0);
+      coordinatePoints.push(runningAccumulator);
+    });
+    let peakValue = Math.max(...coordinatePoints, window.configEngine.startBal + 100);
+    let floorValue = Math.min(...coordinatePoints, window.configEngine.startBal - 100);
+    let totalRangeDelta = peakValue - floorValue;
+    const startLbl = document.getElementById('chart-start-date-label');
+    const endLbl = document.getElementById('chart-end-date-label');
+    if(chronologicalTrades.length) {
+      startLbl.textContent = `Start Matrix (${chronologicalTrades[0].date})`;
+      endLbl.textContent = `Terminal (${chronologicalTrades[chronologicalTrades.length - 1].date})`;
+    } else {
+      startLbl.textContent = 'Start Matrix';
+      endLbl.textContent = 'Terminal Point';
+    }
+    let svgPathLineString = '';
+    let nodeWidthStepSize = 1000 / Math.max(1, coordinatePoints.length - 1);
+    
+    coordinatePoints.forEach((val, index) => {
+      let xCoord = index * nodeWidthStepSize;
+      let yCoord = 350 - (((val - floorValue) / totalRangeDelta) * 290 + 30);
+      if(index === 0) svgPathLineString += `M ${xCoord} ${yCoord}`;
+      else svgPathLineString += ` L ${xCoord} ${yCoord}`;
+    });
+
+    const isLightMode = document.body.classList.contains('theme-light');
+    const axisTextColor = isLightMode ? '#333333' : '#8b94b3';
+    const gridLineColor = isLightMode ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)';
+    const currentThemeColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#00bfff';
+    const sym = window.configEngine.currency;
+
+    let baselineY = 350 - (((window.configEngine.startBal - floorValue) / totalRangeDelta) * 290 + 30);
+    let gridLinesMarkup = '';
+    for(let step = 0; step <= 4; step++) {
+      let absolutePriceLevel = floorValue + (totalRangeDelta * (step / 4));
+      let parsedY = 350 - (((absolutePriceLevel - floorValue) / totalRangeDelta) * 290 + 30);
+      gridLinesMarkup += `
+        <line x1="0" y1="${parsedY}" x2="1000" y2="${parsedY}" stroke="${gridLineColor}" stroke-width="1" stroke-dasharray="4,4" />
+        <text x="10" y="${parsedY - 6}" fill="${axisTextColor}" font-size="9" font-family="sans-serif" font-weight="600">${sym}${Math.round(absolutePriceLevel).toLocaleString()}</text>
+      `;
+    }
+
+    canvasNode.innerHTML = `
+      <svg viewBox="0 0 1000 350" width="100%" height="100%" preserveAspectRatio="none" style="display:block;">
+        <defs>
+          <linearGradient id="chartGlowArea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${currentThemeColor}" stop-opacity="0.15"/>
+            <stop offset="100%" stop-color="${currentThemeColor}" stop-opacity="0.00"/>
+          </linearGradient>
+        </defs>
+        ${gridLinesMarkup}
+        <line x1="0" y1="${baselineY}" x2="1000" y2="${baselineY}" stroke="${isLightMode ? '#777' : '#444'}" stroke-width="1.5" stroke-dasharray="2,2"/>
+        ${coordinatePoints.length > 1 ? `<path d="${svgPathLineString} L 1000 350 L 0 350 Z" fill="url(#chartGlowArea)"/>` : ''}
+        <text x="990" y="${baselineY - 6}" text-anchor="end" fill="${axisTextColor}" font-size="6" font-family="sans-serif" font-weight="bold">${sym}${floorValue.toFixed(2)} (Base)</text>
+        <path d="${svgPathLineString}" fill="none" stroke="${currentThemeColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+  }
+
+  function renderActiveWorkspaceViews() {
+    const isolatedDataset = fetchFilteredLedgerDataset();
+    calculatePerformanceDashboardAndMetrics(isolatedDataset);
+    const chronologicalDataset = [...isolatedDataset].sort((a,b) => new Date(a.date) - new Date(b.date));
+    renderDynamicBalanceEquityPathGraph(chronologicalDataset);
+    if (activeTabScope === 'calendar') {
+      renderInteractiveMatrixCalendar(isolatedDataset);
+    } else if (activeTabScope === 'feed') {
+      const container = document.getElementById('trade-feed-container');
+      container.innerHTML = '';
+      renderTargetFeedHtmlBlock(isolatedDataset, container);
+    }
+  }
+
+  function calculatePerformanceDashboardAndMetrics(dataset) {
+    const sym = window.configEngine.currency;
+    const aggregateNetCashReturn = dataset.reduce((sum, t) => sum + parseFloat(t.pnl || 0), 0);
+    document.getElementById('wd-balance').textContent = `${sym}${(window.configEngine.startBal + aggregateNetCashReturn).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+    let currentStreakCounter = 0;
+    let trackType = null;
+    const chronologicalTrades = [...dataset].sort((a,b) => new Date(a.date) - new Date(b.date));
+    for (let i = chronologicalTrades.length - 1; i >= 0; i--) {
+      let res = chronologicalTrades[i].result;
+      if (res === 'breakeven') continue;
+      if (trackType === null) {
+        trackType = res;
+        currentStreakCounter = 1;
+      } else if (trackType === res) {
+        currentStreakCounter++;
+      } else {
+        break;
+      }
+    }
+    document.getElementById('wd-streak').textContent = currentStreakCounter > 0 ? `${currentStreakCounter} ${trackType === 'win' ? 'Wins' : 'Losses'}` : '0 Wins';
+    document.getElementById('wd-streak').className = `widget-value ${trackType === 'win' ? 'green' : (trackType === 'loss' ? 'red' : '')}`;
+    let disciplinaryInfractionsCount = 0;
+    dataset.forEach(t => {
+      if(t.mistakes && t.mistakes.length) disciplinaryInfractionsCount += t.mistakes.length;
+    });
+    let disciplineScoreCalculatedValue = Math.max(0, 100 - (disciplinaryInfractionsCount * 4));
+    document.getElementById('wd-discipline').textContent = `${disciplineScoreCalculatedValue} / 100`;
+    document.getElementById('pb-discipline').style.width = `${disciplineScoreCalculatedValue}%`;
+    const errorsTrackerMap = {};
+    dataset.forEach(t => {
+      if(t.mistakes) {
+        t.mistakes.forEach(err => {
+          errorsTrackerMap[err] = (errorsTrackerMap[err] || 0) + 1;
+        });
+      }
+    });
+    const leakContainer = document.getElementById('leak-tracker-node');
+    const leakText = document.getElementById('leak-tracker-text');
+    const sortedLeaksArray = Object.entries(errorsTrackerMap).sort((a,b) => b[1] - a[1]);
+    if(sortedLeaksArray.length > 0) {
+      leakContainer.style.borderColor = 'var(--neon-red)';
+      leakText.innerHTML = `Critical Leak Outflow: <strong>${sortedLeaksArray[0][0]}</strong> induced ${sortedLeaksArray[0][1]} discipline parameter failures.`;
+    } else {
+      leakContainer.style.borderColor = 'var(--panel-border)';
+      leakText.textContent = "No leaks detected. Capital protection loop stable.";
+    }
+    const currentMonthFilteredTarget = window.configEngine.monthlyTarget || 1500;
+    let baselineChallengePercentage = (aggregateNetCashReturn / currentMonthFilteredTarget) * 100;
+    if(baselineChallengePercentage < 0) baselineChallengePercentage = 0;
+    if(baselineChallengePercentage > 100) baselineChallengePercentage = 100;
+    document.getElementById('wd-challenge').textContent = `${baselineChallengePercentage.toFixed(2)}%`;
+    document.getElementById('pb-challenge').style.width = `${baselineChallengePercentage}%`;
+    const totalCalculatedTrades = dataset.length;
+    if (totalCalculatedTrades === 0) {
+      document.getElementById('an-winrate').textContent = '0%';
+      document.getElementById('an-profitfactor').textContent = '0.00';
+      document.getElementById('an-avgrr').textContent = '0.00:1';
+      document.getElementById('an-expectancy').textContent = '0.00';
+      document.getElementById('an-expectancy').className = 'astrip-val';
+      document.getElementById('an-maxdd').textContent = `${sym}0.00`;
+      document.getElementById('an-avgwinloss').innerHTML = `<span class="green">${sym}0</span> / <span class="red">${sym}0</span>`;
+      document.getElementById('an-peakwinloss').innerHTML = `<span class="green">${sym}0</span> / <span class="red">${sym}0</span>`;
+      return;
+    }
+    const winsArray = dataset.filter(t => t.result === 'win');
+    const lossesArray = dataset.filter(t => t.result === 'loss');
+    const winRateCalculatedFraction = winsArray.length / totalCalculatedTrades;
+    document.getElementById('an-winrate').textContent = `${Math.round(winRateCalculatedFraction * 100)}%`;
+    const grossCashWins = winsArray.reduce((sum, t) => sum + parseFloat(t.pnl || 0), 0);
+    const grossCashLosses = Math.abs(lossesArray.reduce((sum, t) => sum + parseFloat(t.pnl || 0), 0));
+    document.getElementById('an-profitfactor').textContent = grossCashLosses > 0 ? (grossCashWins / grossCashLosses).toFixed(2) : grossCashWins.toFixed(2);
+    const aggregateRealizedRR = dataset.reduce((sum, t) => sum + (parseFloat(t.rr) || 0), 0);
+    const calculatedAvgRRRatio = aggregateRealizedRR / totalCalculatedTrades;
+    document.getElementById('an-avgrr').textContent = `${calculatedAvgRRRatio.toFixed(2)}:1`;
+    const avgWinValue = winsArray.length ? (grossCashWins / winsArray.length) : 0;
+    const avgLossValue = lossesArray.length ? (grossCashLosses / lossesArray.length) : 0;
+    const standardExpectancyScore = (winRateCalculatedFraction * avgWinValue) - ((1 - winRateCalculatedFraction) * avgLossValue);
+    document.getElementById('an-expectancy').textContent = `${standardExpectancyScore >= 0 ? '+' : ''}${standardExpectancyScore.toFixed(2)}`;
+    document.getElementById('an-expectancy').className = `astrip-val ${standardExpectancyScore >= 0 ? 'green' : 'red'}`;
+    let peakWin = 0, peakLoss = 0, absolutePeakCumulativePnl = 0, trackingRunningCumulativePnl = 0, calculatedMaxDrawdownValue = 0;
+    chronologicalTrades.forEach(t => {
+      const assetCashPnl = parseFloat(t.pnl || 0);
+      trackingRunningCumulativePnl += assetCashPnl;
+      if(trackingRunningCumulativePnl > absolutePeakCumulativePnl) {
+        absolutePeakCumulativePnl = trackingRunningCumulativePnl;
+      }
+      let currentDrawdownDelta = absolutePeakCumulativePnl - trackingRunningCumulativePnl;
+      if(currentDrawdownDelta > calculatedMaxDrawdownValue) {
+        calculatedMaxDrawdownValue = currentDrawdownDelta;
+      }
+      if(assetCashPnl > 0 && assetCashPnl > peakWin) peakWin = assetCashPnl;
+      if(assetCashPnl < 0 && Math.abs(assetCashPnl) > peakLoss) peakLoss = Math.abs(assetCashPnl);
+    });
+    document.getElementById('an-maxdd').textContent = `-${sym}${calculatedMaxDrawdownValue.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+    document.getElementById('an-avgwinloss').innerHTML = `<span class="green">${sym}${Math.round(avgWinValue)}</span> / <span class="red">${sym}${Math.round(avgLossValue)}</span>`;
+    document.getElementById('an-peakwinloss').innerHTML = `<span class="green">${sym}${Math.round(peakWin)}</span> / <span class="red">${sym}${Math.round(peakLoss)}</span>`;
+  }
+
+  function renderInteractiveMatrixCalendar(isolatedDataset) {
+    const gridNode = document.getElementById('calendar-render-node');
+    if(!gridNode) return;
+    gridNode.innerHTML = '';
+    const currentRenderYear = calendarActiveDateEngine.getFullYear();
+    const currentRenderMonth = calendarActiveDateEngine.getMonth();
+    const monthsLabelsMap = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    document.getElementById('cal-headline').textContent = `${monthsLabelsMap[currentRenderMonth]} ${currentRenderYear}`;
+    const daysHeaderArray = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    daysHeaderArray.forEach(lbl => {
+      gridNode.innerHTML += `<div class="cal-day-lbl">${lbl}</div>`;
+    });
+    const runningFirstDayInstance = new Date(currentRenderYear, currentRenderMonth, 1);
+    const calculatedMonthOffsetStartDay = runningFirstDayInstance.getDay();
+    const totalDaysInCurrentMonthBlock = new Date(currentRenderYear, currentRenderMonth + 1, 0).getDate();
+    for (let emptyStep = 0; emptyStep < calculatedMonthOffsetStartDay; emptyStep++) {
+      gridNode.innerHTML += `<div class="cal-node empty"></div>`;
+    }
+    const isLightMode = document.body.classList.contains('theme-light');
+    for (let day = 1; day <= totalDaysInCurrentMonthBlock; day++) {
+      let rawIsoString = `${currentRenderYear}-${String(currentRenderMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      let matchingDayTrades = isolatedDataset.filter(t => t.date === rawIsoString);
+      let aggregatedDayNetReturn = matchingDayTrades.reduce((sum, t) => sum + parseFloat(t.pnl || 0), 0);
+      let dayOfWeekIndex = new Date(currentRenderYear, currentRenderMonth, day).getDay();
+      let isWeekendNode = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
+      let intensityStylingHex = '';
+      if(matchingDayTrades.length) {
+        if (aggregatedDayNetReturn >= 0) {
+          let opacityValue = isLightMode ? '0.22' : '0.18';
+          let borderStrengthColor = isLightMode ? '#009933' : 'var(--neon-green)';
+          intensityStylingHex = `background:rgba(0,255,102,${opacityValue}); border: 2px solid ${borderStrengthColor};`;
+        } else {
+          let opacityValue = isLightMode ? '0.18' : '0.18';
+          let borderStrengthColor = isLightMode ? '#cc0033' : 'var(--neon-red)';
+          intensityStylingHex = `background:rgba(255,51,102,${opacityValue}); border: 2px solid ${borderStrengthColor};`;
+        }
+      }
+      gridNode.innerHTML += `
+        <div class="cal-node ${isWeekendNode ? 'weekend-node' : ''}" style="${intensityStylingHex}" onclick="executeCalendarDayInlineInspection('${rawIsoString}')">
+          <div class="cal-node-num">${day}</div>
+          ${matchingDayTrades.length ? `
+            <div class="cal-node-pnl ${aggregatedDayNetReturn>=0?'green':'red'}">${aggregatedDayNetReturn>=0?'+':''}${window.configEngine.currency}${Math.abs(aggregatedDayNetReturn).toFixed(2)}</div>
+            <div class="badge" style="font-size:9px; font-weight: 700; padding:1px 3px; border-radius:2px; align-self:flex-start;">${matchingDayTrades.length} Trades</div>
+          ` : ''}
+        </div>
+      `;
+    }
+  }
+
+  function renderTargetFeedHtmlBlock(dataset, mountHtmlNode) {
+    if(!dataset.length) {
+      mountHtmlNode.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-weight:600;">No historic ledger vectors matching filter constraints.</div>`;
+      return;
+    }
+    const sortedExecutionFeed = [...dataset].sort((a,b) => new Date(b.date) - new Date(a.date));
+    const sym = window.configEngine.currency;
+    sortedExecutionFeed.forEach(t => {
+      let cardPolarityClass = t.result === 'win' ? 'win' : (t.result === 'loss' ? 'loss' : '');
+      let structuralScoreBadge = t.confluence ? `<span class="badge" style="margin-left:4px; vertical-align:middle;">Confluence: ${t.confluence}/5</span>` : '';
+      let gradeBadge = t.grade ? `<span class="badge" style="margin-left:4px; vertical-align:middle; background:rgba(0,191,255,0.1); color:#00bfff; border-color:rgba(0,191,255,0.3);">${t.grade} Setup</span>` : '';
+      mountHtmlNode.innerHTML += `
+        <div class="t-card ${cardPolarityClass}">
+          <div class="t-header">
+            <div>
+              <strong style="font-size:16px; letter-spacing:-0.3px;">${t.pair}</strong> 
+              <span class="badge ${t.dir==='buy'?'win':'loss'}" style="margin-left:6px; vertical-align:middle;">${t.dir}</span>
+              ${structuralScoreBadge}
+              ${gradeBadge}
+              <span style="font-size:12px; color:var(--text-muted); margin-left:10px; font-weight:600;">${t.date}</span>
+            </div>
+            <div style="font-size:18px; font-weight:900; letter-spacing:-0.5px;" class="${t.pnl>=0?'green':'red'}">${t.pnl>=0?'+':''}${sym}${Math.abs(t.pnl).toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+          </div>
+          <div class="t-metrics-grid">
+            <div class="t-subfield">Entry<span>${t.entry || 'N/A'}</span></div>
+            <div class="t-subfield">Exit<span>${t.exit || 'N/A'}</span></div>
+            <div class="t-subfield">Volume Lot<span>${t.lot || '0.00'}</span></div>
+            <div class="t-subfield">Delta Pips<span>${t.pips || '0'} pips</span></div>
+            <div class="t-subfield">Risk Risked<span>${t.riskpct || '0'}%</span></div>
+            <div class="t-subfield">R:R Ratio<span>${t.rr || '0'}:1</span></div>
+            <div class="t-subfield">Killzone Session<span>${t.session || 'Unspecified'}</span></div>
+            <div class="t-subfield">Model Framework<span>${t.strategy || 'LSF Model'}</span></div>
+          </div>
+          ${t.note ? `<div style="font-size:13px; color:var(--text-main); font-weight:500; margin-top:8px; line-height:1.4; background:rgba(0,0,0,0.15); padding:8px; border-radius:4px; border:1px solid var(--panel-border)"><strong>Parameters Telemetry Notes:</strong> ${t.note}</div>` : ''}
+          ${t.mistakes && t.mistakes.length ? `<div style="margin-top:6px;"><span style="font-size:10px; font-weight:700; color:var(--neon-red); text-transform:uppercase; letter-spacing:0.3px; margin-right:6px;">Rule Infractions:</span> ${t.mistakes.map(m => `<span class="badge loss" style="margin-right:4px; font-size:9px;">${m}</span>`).join('')}</div>` : ''}
+          ${(t.imgBefore || t.imgAfter) ? `
+            <div class="t-images">
+              ${t.imgBefore ? `<div class="t-img-box"><span>Pre-Execution Framework Position Matrix</span><img src="${t.imgBefore}"/></div>` : ''}
+              ${t.imgAfter ? `<div class="t-img-box"><span>Post-Route Structural Vector Resolution</span><img src="${t.imgAfter}"/></div>` : ''}
+            </div>
+          ` : ''}
+          <div style="display:flex; justify-content: flex-end; gap:8px; margin-top:12px; padding-top:10px; border-top:1px dashed var(--panel-border);">
+            <button class="btn" style="padding:4px 10px; font-size:11px;" onclick="openTradeModalForNewEntry('${t.id}')">Modify Record</button>
+            <button class="btn btn-danger" style="padding:4px 10px; font-size:11px;" onclick="purgeTradeRecordNode('${t.id}')">Purge File</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function exportBackupData() {
+    const rawDataString = JSON.stringify(window.trades, null, 2);
+    const blobAnchor = document.createElement('a');
+    blobAnchor.href = URL.createObjectURL(new Blob([rawDataString], { type: 'application/json' }));
+    blobAnchor.download = `edgeledger_secure_matrix_vault_${Date.now()}.json`;
+    blobAnchor.click();
+  }
+
+  async function importBackupData(fileInputElement) {
+    if(!fileInputElement.files.length) return;
+    const engineReader = new FileReader();
+    engineReader.onload = async function(e) {
+      try {
+        const incomingData = JSON.parse(e.target.result);
+        if(Array.isArray(incomingData)) {
+          window.trades = incomingData;
+          if (window.firebaseSaveTrade) {
+            for (const t of window.trades) {
+              const cleanedPayload = { ...t };
+              delete cleanedPayload.id;
+              await window.firebaseSaveTrade(t.id, cleanedPayload);
+            }
+          }
+          syncStrategySelectors();
+          renderActiveWorkspaceViews();
+          alert("Dynamic data structures restored seamlessly.");
+        } else { alert("Data structural mismatch."); }
+      } catch(err) { alert("File processing error."); }
+    };
+    engineReader.readAsText(fileInputElement.files[0]);
+  }
+
+  function exportToCSVData() {
+    let csvRows = ["ID,Date,Asset,Direction,Grade,Entry,Exit,Pips,P&L,Result,Strategy,Session\n"];
+    window.trades.forEach(t => {
+      csvRows.push(`"${t.id}","${t.date}","${t.pair}","${t.dir}","${t.grade}","${t.entry}","${t.exit}","${t.pips}","${t.pnl}","${t.result}","${t.strategy}","${t.session}"\n`);
+    });
+    const dynamicAnchorCSV = document.createElement('a');
+    dynamicAnchorCSV.href = URL.createObjectURL(new Blob([csvRows.join('')], { type: 'text/csv' }));
+    dynamicAnchorCSV.download = `edgeledger_spreadsheet_ledger_${Date.now()}.csv`;
+    dynamicAnchorCSV.click();
+  }
+
+  setSystemTheme('blue');
+  function setSystemTheme(themeColorName) {
+    document.body.classList.remove('theme-green', 'theme-purple', 'theme-gold');
+    document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+    if(themeColorName !== 'blue') {
+      document.body.classList.add('theme-' + themeColorName);
+    }
+    const dotElementIndexMap = {'blue': 0, 'green': 1, 'purple': 2, 'gold': 3};
+    const targetDot = document.querySelectorAll('.color-dot')[dotElementIndexMap[themeColorName]];
+    if(targetDot) targetDot.classList.add('active');
+    renderActiveWorkspaceViews();
+  }
+
+  window.switchSystemTab = switchSystemTab;
+  window.triggerMobileDockSwap = triggerMobileDockSwap;
+  window.toggleSystemLightMode = toggleSystemLightMode;
+  window.changeSystemLayoutMode = changeSystemLayoutMode;
+  window.changeSystemWorkspaceFont = changeSystemWorkspaceFont;
+  window.updateAccountEngineSettings = updateAccountEngineSettings;
+  window.clearSystemFilterScopes = clearSystemFilterScopes;
+  window.adjustCalendarViewScope = adjustCalendarViewScope;
+  window.openTradeModalForNewEntry = openTradeModalForNewEntry;
+  window.closeTradeModal = closeTradeModal;
+  window.commitTradeRecordFromForm = commitTradeRecordFromForm;
+  window.purgeTradeRecordNode = purgeTradeRecordNode;
+  window.executeCalendarDayInlineInspection = executeCalendarDayInlineInspection;
+  window.closeDayInspectionModal = closeDayInspectionModal;
+  window.compressAndProcessImageTelemetry = compressAndProcessImageTelemetry;
+  window.exportBackupData = exportBackupData;
+  window.importBackupData = importBackupData;
+  window.exportToCSVData = exportToCSVData;
+  window.setSystemTheme = setSystemTheme;
+  window.syncConfigEngineDOMValues = syncConfigEngineDOMValues;
+  window.syncStrategySelectors = syncStrategySelectors;
+  window.renderActiveWorkspaceViews = renderActiveWorkspaceViews;
+</script>
+
+<button class="floating-log-btn" onclick="openTradeModalForNewEntry()">+ Log Execution Parameter</button>
+
+<div class="overlay" id="day-inspection-overlay">
+  <div class="modal" style="max-width:850px;">
+    <div class="modal-head">
+      <span id="day-inspection-title">Execution Parameters Matrix</span>
+      <button class="btn btn-danger" style="padding:2px 8px;" onclick="closeDayInspectionModal()">X</button>
+    </div>
+    <div class="trade-feed" id="day-inspection-feed"></div>
+  </div>
+</div>
+
+<input type="hidden" id="img-stored-before">
+<input type="hidden" id="img-stored-after">
+
+<div style="display:none;">
+  <input type="file" id="file-before-node" onchange="compressAndProcessImageTelemetry(this, 'img-stored-before')">
+  <input type="file" id="file-after-node" onchange="compressAndProcessImageTelemetry(this, 'img-stored-after')">
+</div>
+
+</body>
+</html>
