@@ -1367,6 +1367,30 @@
     document.body.classList.add('theme-' + themeColorName);
     renderActiveWorkspaceViews();
   }
+
+  <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyDpL5azC_gO0w_pV5aJbyTKVzTXB7Bl6ms",
+    authDomain: "edgeledger-real-18d9b.firebaseapp.com",
+    projectId: "edgeledger-real-18d9b",
+    storageBucket: "edgeledger-real-18d9b.firebasestorage.app",
+    messagingSenderId: "898193365823",
+    appId: "1:898193365823:web:928dce43f2f9461075518a",
+    measurementId: "G-Z92BDLPLT7"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </script>
 </body>
 </html>
