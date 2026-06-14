@@ -270,7 +270,12 @@
         <div class="vector-label"><span>Access Cipher</span></div>
         <div style="position:relative;">
           <input type="password" id="auth-password" class="cipher-input" placeholder="••••••••" style="padding-right:50px;">
-          <span onclick="togglePassword()" id="eye-icon" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;color:#64748b;user-select:none;">👁</span>
+          <span onclick="togglePassword()" id="eye-icon" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;user-select:none;display:flex;align-items:center;">
+            <svg id="eye-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </span>
         </div>
         <div id="auth-password-error" class="input-error-alert"></div>
       </div>
@@ -431,16 +436,15 @@
 
     window.togglePassword = function() {
       const input = document.getElementById("auth-password");
-      const icon = document.getElementById("eye-icon");
+      const svg = document.getElementById("eye-svg");
       if (input.type === "password") {
         input.type = "text";
-        icon.innerText = "🙈";
+        svg.setAttribute("stroke", "#00f2fe");
       } else {
         input.type = "password";
-        icon.innerText = "👁";
+        svg.setAttribute("stroke", "#64748b");
       }
     };
   </script>
 </body>
 </html>
-
