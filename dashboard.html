@@ -624,14 +624,14 @@
       const configRef = doc(db, "users", currentUid, "config", "engineSettings");
       const configSnap = await getDoc(configRef);
       if (configSnap.exists()) {
-        configEngine = { ...configEngine, ...configSnap.data() };
+        window.configEngine = { ...window.configEngine, ...configSnap.data() };
       }
 
       const tradesRef = collection(db, "users", currentUid, "trades");
       const tradesSnap = await getDocs(tradesRef);
-      trades = [];
+      window.trades = [];
       tradesSnap.forEach((d) => {
-        trades.push({ id: d.id, ...d.data() });
+        window.trades.push({ id: d.id, ...d.data() });
       });
 
       syncConfigEngineDOMValues();
@@ -667,8 +667,8 @@
 </script>
 
 <script>
-  let trades = [];
-  let configEngine = {
+  window.trades = [];
+  window.configEngine = {
     startBal: 10000,
     monthlyTarget: 1500,
     currency: '$',
@@ -1401,4 +1401,3 @@
 </script>
 </body>
 </html>
-
